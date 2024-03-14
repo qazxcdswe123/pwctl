@@ -14,24 +14,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Database struct {
-	MdName                string      `json:"md_name"`
-	MdGroup               string      `json:"md_group"`
-	MdConfig              interface{} `json:"md_config"`
-	MdDBType              string      `json:"md_dbtype"`
-	MdConnStr             string      `json:"md_connstr"`
-	MdEncryption          string      `json:"md_encryption"`
-	MdIsEnabled           bool        `json:"md_is_enabled"`
-	MdCustomTags          interface{} `json:"md_custom_tags"`
-	MdHostConfig          interface{} `json:"md_host_config"`
-	MdIsSuperuser         bool        `json:"md_is_superuser"`
-	MdConfigStandby       interface{} `json:"md_config_standby"`
-	MdOnlyIfMaster        bool        `json:"md_only_if_master"`
-	MdExcludePattern      interface{} `json:"md_exclude_pattern"`
-	MdIncludePattern      interface{} `json:"md_include_pattern"`
-	MdLastModifiedOn      string      `json:"md_last_modified_on"`
-	MdPresetConfigName    string      `json:"md_preset_config_name"`
-	MdPresetConfigNameStd interface{} `json:"md_preset_config_name_standby"`
+type database struct {
+	MdName                    string  `json:"md_name"`
+	MdConnstr                 string  `json:"md_connstr"`
+	MdIsSuperuser             bool    `json:"md_is_superuser"`
+	MdPresetConfigName        string  `json:"md_preset_config_name"`
+	MdConfig                  *string `json:"md_config"`
+	MdIsEnabled               bool    `json:"md_is_enabled"`
+	MdLastModifiedOn          string  `json:"md_last_modified_on"`
+	MdDbtype                  string  `json:"md_dbtype"`
+	MdIncludePattern          *string `json:"md_include_pattern"`
+	MdExcludePattern          *string `json:"md_exclude_pattern"`
+	MdCustomTags              *string `json:"md_custom_tags"`
+	MdGroup                   string  `json:"md_group"`
+	MdEncryption              string  `json:"md_encryption"`
+	MdHostConfig              *string `json:"md_host_config"`
+	MdOnlyIfMaster            bool    `json:"md_only_if_master"`
+	MdPresetConfigNameStandby *string `json:"md_preset_config_name_standby"`
+	MdConfigStandby           *string `json:"md_config_standby"`
 }
 
 // getCmd represents the get command
@@ -57,7 +57,7 @@ func prettyPrintJson(str []byte) (string, error) {
 	return prettyJSON.String(), nil
 }
 
-func getDatabase(ctx context.Context, token, url string) ([]Database, error) {
+func getDatabase(ctx context.Context, token, url string) ([]database, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url+"/db", nil)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func getDatabase(ctx context.Context, token, url string) ([]Database, error) {
 	}
 	defer resp.Body.Close()
 
-	var databases []Database
+	var databases []database
 	err = json.NewDecoder(resp.Body).Decode(&databases)
 	if err != nil {
 		return nil, err
