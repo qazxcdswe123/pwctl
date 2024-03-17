@@ -5,67 +5,51 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
-	"os"
-
+	"github.com/qazxcdswe123/pwctl/pkgs/util"
 	"github.com/spf13/cobra"
+	"log/slog"
+	"os"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "pwctl",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+var (
+	username string
+	password string
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
-}
+	hostname string
+)
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
-}
+func NewRootCommand() *cobra.Command {
+	var (
+		l = slog.Default()
+	)
 
-var hostname string
-var username string
-var password string
+	cmd := &cobra.Command{
+		Use:     "pwctl",
+		Short:   "pwctl is a CLI tool to manage pgwatch3",
+		Version: util.GetVersion().String(),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Validate hostname early
+			if err := util.ValidateHostname(hostname); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
-func ensureHostname(str string) error {
-	u, err := url.Parse(str)
-	if err != nil {
-		return err
-	}
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return fmt.Errorf("invalid url scheme, must be http or https")
+			// Set the JWT Token before running any subcommand
+			err := util.SetJWTToken(username, password, hostname)
+			if err != nil {
+				return fmt.Errorf("failed to set JWT Token: %v", err)
+			}
+			return nil
+		},
 	}
 
-	return nil
-}
+	cmd.PersistentFlags().StringVarP(&hostname, "hostname", "u", "http://localhost:8080", "URL of the server")
+	cmd.PersistentFlags().StringVarP(&username, "username", "U", "", "Username")
+	cmd.PersistentFlags().StringVarP(&password, "password", "P", "", "Password")
 
-func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	cmd.AddCommand(newListCommand(l))
+	cmd.AddCommand(newGetCommand(l))
+	//cmd.AddCommand(newVersionCommand(l))
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pwctl.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.PersistentFlags().StringVarP(&hostname, "url", "u", "localhost:8080", "URL of the server")
-	if err := ensureHostname(hostname); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	rootCmd.PersistentFlags().StringVarP(&username, "username", "U", "", "Username")
-	rootCmd.PersistentFlags().StringVarP(&password, "password", "P", "", "Password")
+	return cmd
 }
