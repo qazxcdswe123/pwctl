@@ -1,12 +1,14 @@
 - `pwctl -U admin -P admin -u localhost:8080 subcommand`
 	- `-U`: username (or `-u`, capital U to be consistent with `psql`)
 	- `-P`: password (should we pass it via command line arguments or enter interactively?) (or `-p`?)
-	- `-h`: host (optional, default to `localhost:8080`)
+	- `-h`: host (optional, default to `http:/localhost:8080`)
+	- Should also consider saving the credential to `.config` directory to make the auth status persistent. Then we can make a `auth` command and get rid of this
 
 1. `list`
     - `database`
     - `metric`
     - `preset`
+    - `stat`
 2. `get`
    - `database`
       - `--id` or `--name` for detail, by default `list` only shows id, name
@@ -14,7 +16,6 @@
       - `--id` for detail, by default `list` only shows id, name
       - limit the output number?
    - `preset`
-   - `stat`
 3. `add`: probably too many parameters? Maybe use yaml file if needed.
    - `database`
    - `metric`
